@@ -6,8 +6,11 @@ export const addCodeInStyleBlocks = (css: string, html: string) => {
   for (const arr of [...html.matchAll(new RegExp(pattern, 'g'))]) {
     const content = arr[5];
     if (content?.trim()) {
-      css += `\n${content}`;
+      // Remove any markdown-style code blocks from the content
+      const cleanedContent = content.replace(/```[\s\S]*?```/g, '');
+      css += `\n${cleanedContent}`;
     }
   }
-  return css;
+  // Final cleanup: remove any stray triple backticks that might remain
+  return css.replace(/```/g, '');
 };

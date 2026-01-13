@@ -52,7 +52,10 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
     };
 
     const load = async () => {
-      if (id === 'tailwindcss') {
+      // Normalize the ID to handle various import formats
+      const normalizedId = id.replace(/^\.\//, '').replace(/\.css$/, '');
+
+      if (id === 'tailwindcss' || normalizedId === 'tailwindcss') {
         return {
           base,
           content: await fetchFromCDN('index.css'),
@@ -60,7 +63,9 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
       } else if (
         id === 'tailwindcss/preflight' ||
         id === 'tailwindcss/preflight.css' ||
-        id === './preflight.css'
+        id === './preflight.css' ||
+        normalizedId === 'tailwindcss/preflight' ||
+        normalizedId === 'preflight'
       ) {
         return {
           base,
@@ -69,7 +74,9 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
       } else if (
         id === 'tailwindcss/theme' ||
         id === 'tailwindcss/theme.css' ||
-        id === './theme.css'
+        id === './theme.css' ||
+        normalizedId === 'tailwindcss/theme' ||
+        normalizedId === 'theme'
       ) {
         return {
           base,
@@ -78,7 +85,9 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
       } else if (
         id === 'tailwindcss/utilities' ||
         id === 'tailwindcss/utilities.css' ||
-        id === './utilities.css'
+        id === './utilities.css' ||
+        normalizedId === 'tailwindcss/utilities' ||
+        normalizedId === 'utilities'
       ) {
         return {
           base,
@@ -86,11 +95,22 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
         };
       }
 
+      // If none of the above match, try to fetch as an absolute URL
+      // Only fetch if the ID looks like a valid URL
+      if (id.startsWith('http://') || id.startsWith('https://')) {
+        return {
+          base,
+          content: await fetch(id)
+            .then((res) => res.text())
+            .catch(() => ''),
+        };
+      }
+
+      // For any other case, return empty content to avoid MIME type errors
+      console.warn(`[Tailwind CSS] Unknown stylesheet ID: "${id}". Returning empty content.`);
       return {
         base,
-        content: await fetch(id)
-          .then((res) => res.text())
-          .catch(() => ''),
+        content: '',
       };
     };
 
@@ -193,7 +213,9 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
 
   const tailwind4: CompilerFunction = async (code, { config, options }) => {
     const prepareCode = (css: string, html: string) => {
-      let result = replaceStyleImports(css, [/tailwindcss/g]);
+      // First, clean the input CSS of any problematic characters
+      let result = css.replace(/```[\s\S]*?```/g, '').replace(/```/g, '');
+      result = replaceStyleImports(result, [/tailwindcss/g]);
       if (!result.includes('@import')) {
         result = `@import "tailwindcss";${result}`;
       }
@@ -202,6 +224,27 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
 
     const html = `<template>${options.html}\n<script>${config.script.content}</script></template>`;
     const css = prepareCode(code, html);
+
+    // Additional validation to catch problematic content before compilation
+    if (css.includes('```')) {
+      console.warn('[Tailwind CSS] CSS contains triple backticks. Removing them to prevent compilation errors.');
+      const cleanedCss = css.replace(/```/g, '');
+      try {
+        const compiler = await self.tailwindcss.compile(cleanedCss, {
+          base: '/',
+          loadStylesheet,
+          loadModule,
+        });
+        const candidates = scan(html);
+        const output: string = compiler.build(candidates);
+        return processInLightningCss(output, 'lightningcss' as Language, config, options);
+      } catch (e: any) {
+        // eslint-disable-next-line no-console
+        console.error('Error compiling Tailwind CSS after cleaning.', e.message || e);
+        return code;
+      }
+    }
+
     try {
       const compiler = await self.tailwindcss.compile(css, {
         base: '/',
@@ -214,8 +257,27 @@ self.createTailwindcssCompiler = (): CompilerFunction => {
     } catch (e: any) {
       // eslint-disable-next-line no-console
       console.error('Error compiling Tailwind CSS.', e.message || e);
+      console.log('[Tailwind CSS] Problematic CSS (first 500 chars):', css.substring(0, 500));
+      console.log('[Tailwind CSS] CSS contains backticks:', css.includes('```'));
+
+      // Try one more time with aggressive cleanup
+      const ultraCleanCss = css.replace(/`/g, '').replace(/[^\x20-\x7E\n\r\t]/g, '');
+      try {
+        const compiler = await self.tailwindcss.compile(ultraCleanCss, {
+          base: '/',
+          loadStylesheet,
+          loadModule,
+        });
+        const candidates = scan(html);
+        const output: string = compiler.build(candidates);
+        console.log('[Tailwind CSS] Successfully compiled after aggressive cleanup');
+        return processInLightningCss(output, 'lightningcss' as Language, config, options);
+      } catch (e2: any) {
+        console.error('[Tailwind CSS] Failed even after cleanup:', e2.message || e2);
+      }
     }
-    return css;
+    // Return the cleaned original code as fallback
+    return code.replace(/```[\s\S]*?```/g, '').replace(/```/g, '');
   };
 
   return (cssCode, compileOptions) =>

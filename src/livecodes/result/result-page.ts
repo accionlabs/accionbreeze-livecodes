@@ -168,11 +168,13 @@ export const createResultPage = async ({
     styleElement.id = '__livecodes_styles__';
     styleElement.innerHTML = style;
     dom.head.appendChild(styleElement);
+    console.log('[LiveCodes] Inlining CSS in result page. CSS length:', style.length);
   } else {
     const EditorStylesheet = dom.createElement('link');
     EditorStylesheet.rel = 'stylesheet';
     EditorStylesheet.href = './style.css';
     dom.head.appendChild(EditorStylesheet);
+    console.log('[LiveCodes] Linking to external style.css (this may not work in sandbox)');
   }
 
   // cleanup extra scripts added to detect classes for CSS processors

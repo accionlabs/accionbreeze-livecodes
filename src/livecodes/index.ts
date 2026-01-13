@@ -69,7 +69,12 @@ function load() {
   }, 500);
 }
 
+let hasLoaded = false;
+
 function loaded() {
+  if (hasLoaded) return;
+  hasLoaded = true;
+
   loadingEl.style.opacity = '0';
   setTimeout(() => {
     loadingEl.remove();
@@ -91,6 +96,19 @@ window.addEventListener(customEvents.appLoaded, (e: CustomEventInit) => {
   (window as any).livecodes = e.detail;
 });
 
+// Fallback timeout in case the app doesn't load properly
+// This prevents the loading screen from being stuck forever
+const loadingTimeout = setTimeout(() => {
+  if (!hasLoaded) {
+    console.warn('App loading timed out. Forcing loaded state.');
+    loaded();
+  }
+}, 30000); // 30 seconds timeout
+
+window.addEventListener(customEvents.appLoaded, () => {
+  clearTimeout(loadingTimeout);
+});
+
 // window.addEventListener(customEvents.ready, () => {
 //   // project loaded
 // });
@@ -108,6 +126,7 @@ window.addEventListener(customEvents.appLoaded, (e: CustomEventInit) => {
 // });
 
 window.addEventListener(customEvents.destroy, () => {
+  clearTimeout(loadingTimeout);
   window.removeEventListener('resize', resize);
   document.body.innerHTML = '';
   document.head.innerHTML = '';

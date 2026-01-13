@@ -88,8 +88,15 @@ export const livecodes = (container: string, config: Partial<Config> = {}): Prom
       const disableAIQuery = disableAI ? `?disableAI` : '';
       iframe.src = './app.html' + disableAIQuery;
       let contentLoaded = false;
+
+      // Add error handler for iframe
+      iframe.onerror = (error) => {
+        console.error('Error loading iframe:', error);
+      };
+
       iframe.onload = () => {
         if (contentLoaded) return;
+        console.log('Iframe loaded, injecting app content...');
         const appContent = appHTML
           .replace(/{{baseUrl}}/g, baseUrl)
           .replace(/{{script}}/g, scriptFile)
@@ -216,9 +223,12 @@ export const livecodes = (container: string, config: Partial<Config> = {}): Prom
       );
 
       iframe.addEventListener('load', async () => {
+        console.log('Iframe content loaded, checking for app function...');
         const app = (iframe.contentWindow as any)?.app;
         if (typeof app === 'function') {
+          console.log('App function found, initializing...');
           api = (await app(config, baseUrl)) as API;
+          console.log('App initialized successfully');
           if (!isHeadless) {
             iframe.style.display = 'block';
           }
@@ -227,7 +237,10 @@ export const livecodes = (container: string, config: Partial<Config> = {}): Prom
               detail: api,
             }),
           );
+          console.log('appLoaded event dispatched');
           resolve(api);
+        } else {
+          console.warn('App function not found on iframe.contentWindow', iframe.contentWindow);
         }
       });
     };
