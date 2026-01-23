@@ -104,6 +104,9 @@ export const getEditorSettingsBtn = /* @__PURE__ */ () =>
 export const getShareButton = /* @__PURE__ */ () =>
   document.querySelector('#share-button') as HTMLElement;
 
+export const getPublishButton = /* @__PURE__ */ () =>
+  document.querySelector('#publish-button') as HTMLElement;
+
 export const getResultButton = /* @__PURE__ */ () =>
   document.querySelector('#result-button') as HTMLElement;
 

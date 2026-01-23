@@ -4,10 +4,36 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     {{codeiumMeta}}
-    <title>LiveCodes</title>
+    <title>BreezeAI Playground</title>
     <style>
       body {
         overflow: hidden;
+      }
+
+      /* BreezeAI: Prevent text selection in editor areas only */
+      .editor,
+      .editor * {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      #result,
+      #result * {
+        -webkit-user-select: auto;
+        -moz-user-select: auto;
+        -ms-user-select: auto;
+        user-select: auto;
+      }
+
+      /* BreezeAI: Hide copy and edit buttons in readonly mode */
+      #copy-btn,
+      #copy-as-url-btn,
+      #format-btn,
+      #undo-btn,
+      #redo-btn {
+        display: none !important;
       }
     </style>
     <link rel="preconnect" href="https://cdn.jsdelivr.net/" crossorigin />
@@ -49,12 +75,12 @@
             <a
               href="/"
               id="logo"
-              title="LiveCodes: A Code Playground That Just Works!"
+              title="BreezeAI: Code Playground"
               data-i18n="app.logo.title"
               data-i18n-prop="title"
             >
               <img
-                alt="LiveCodes Logo"
+                alt="BreezeAI Logo"
                 src="{{baseUrl}}assets/images/livecodes-logo.svg"
                 loading="lazy"
               />
@@ -162,6 +188,17 @@
               data-i18n-prop="title"
             >
               <i class="icon-share"></i>
+            </a>
+            <a
+              href="javascript:void(0)"
+              id="publish-button"
+              class="button"
+              title="Publish (Deploy to GitHub)"
+              aria-label="Publish (Deploy to GitHub)"
+              data-i18n="app.publish.hint"
+              data-i18n-prop="title"
+            >
+              <span style="font-size: 18px;">📤</span>
             </a>
 
             <a

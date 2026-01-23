@@ -2908,6 +2908,10 @@ const handleShareButton = () => {
   eventsManager.addEventListener(UI.getShareButton(), 'click', () => showScreen('share'));
 };
 
+const handlePublishButton = () => {
+  eventsManager.addEventListener(UI.getPublishButton(), 'click', () => showScreen('deploy'));
+};
+
 const handleI18nMenu = () => {
   const menuContainer = UI.getI18nMenuContainer();
   const i18nMenu = document.createElement('ul');
@@ -5155,6 +5159,7 @@ const basicHandlers = () => {
   handleRunButton();
   handleResultButton();
   handleShareButton();
+  handlePublishButton();
   handleEditorTools();
   handleProcessors();
   handleResultLoading();

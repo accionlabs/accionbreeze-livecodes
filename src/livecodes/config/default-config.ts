@@ -20,9 +20,9 @@ export const defaultConfig: Config = {
   appLanguage: undefined,
   recoverUnsaved: true,
   showSpacing: false,
-  welcome: true,
-  readonly: false,
-  allowLangChange: true,
+  welcome: false,
+  readonly: true,
+  allowLangChange: false,
   activeEditor: undefined,
   languages: undefined,
   markup: {
