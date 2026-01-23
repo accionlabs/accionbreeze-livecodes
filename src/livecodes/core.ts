@@ -4790,19 +4790,23 @@ const handleResultLoading = () => {
   });
 
   const showResultModeDrawer = (event: MessageEvent) => {
-    const iframe = UI.getResultIFrameElement();
-    if (
-      !iframe ||
-      event.source !== iframe.contentWindow ||
-      event.data.type !== 'loading' ||
-      event.data.payload !== false ||
-      getConfig().mode !== 'result'
-    ) {
-      return;
-    }
-    const drawer = UI.getResultModeDrawer();
-    drawer.classList.remove('hidden');
-    eventsManager.removeEventListener(window, 'message', showResultModeDrawer);
+    // Don't show "Edit on LiveCodes" drawer in result mode - always return early
+    return;
+
+    // Original code disabled to prevent drawer from showing
+    // const iframe = UI.getResultIFrameElement();
+    // if (
+    //   !iframe ||
+    //   event.source !== iframe.contentWindow ||
+    //   event.data.type !== 'loading' ||
+    //   event.data.payload !== false ||
+    //   getConfig().mode !== 'result'
+    // ) {
+    //   return;
+    // }
+    // const drawer = UI.getResultModeDrawer();
+    // drawer.classList.remove('hidden');
+    // eventsManager.removeEventListener(window, 'message', showResultModeDrawer);
   };
   eventsManager.addEventListener(window, 'message', showResultModeDrawer);
 };
@@ -5219,7 +5223,10 @@ const extraHandlers = async () => {
 
 const configureEmbed = (eventsManager: EventsManager) => {
   document.body.classList.add('embed');
-  handleResultModeDrawer();
+  // Don't show "Edit on LiveCodes" drawer in result mode
+  if (getConfig().mode !== 'result') {
+    handleResultModeDrawer();
+  }
 
   const logoLink = UI.getLogoLink();
   logoLink.title = window.deps.translateString('generic.embed.logoHint', 'Edit on LiveCodes 🡕');
