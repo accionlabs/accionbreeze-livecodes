@@ -21,8 +21,8 @@ export const defaultConfig: Config = {
   recoverUnsaved: true,
   showSpacing: false,
   welcome: false,
-  readonly: true,
-  allowLangChange: false,
+  readonly: false,
+  allowLangChange: true,
   activeEditor: undefined,
   languages: undefined,
   markup: {

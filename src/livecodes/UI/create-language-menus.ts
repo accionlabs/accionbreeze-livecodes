@@ -61,13 +61,9 @@ export const createLanguageMenus = (
     if (editorLanguages.length === 0) {
       editorSelector.classList.add('hidden');
       editorsNumber -= 1;
-    } else if (editorLanguages.length === 1) {
-      const changeLanguageButton =
-        editorSelector.querySelector<HTMLElement>('.language-menu-button');
-      if (changeLanguageButton) {
-        changeLanguageButton.style.display = 'none';
-      }
     }
+    // Always show the language dropdown button, even if there's only one language
+    // This allows users to see all available language options
 
     const enabledProcessors = window.deps.processors.filter(
       (p) => p.editor === editorId && processorIsEnabled(p.name, config),

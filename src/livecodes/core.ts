@@ -1354,15 +1354,21 @@ const share = async (
   const appUrl = permanentUrl ? permanentUrlService.getAppUrl() : currentUrl;
   let shareURL = new URL(appUrl);
   if (shortUrl) {
-    shareURL.search =
-      'x=id/' +
-      (await shareService.shareProject({
-        ...content,
-        result: includeResult ? getCache().result : undefined,
-      }));
+    const projectId = await shareService.shareProject({
+      ...content,
+      result: includeResult ? getCache().result : undefined,
+    });
+    // Add mode=result before the x=id parameter
+    shareURL.search = 'mode=result&x=id/' + projectId;
   } else {
     const playgroundUrl = getPlaygroundUrl({ appUrl, config: content });
     shareURL = new URL(playgroundUrl);
+    // Add mode=result to long URLs
+    const searchParams = new URLSearchParams(shareURL.search);
+    if (!searchParams.has('mode')) {
+      searchParams.set('mode', 'result');
+      shareURL.search = searchParams.toString();
+    }
   }
 
   if (urlUpdate) {
