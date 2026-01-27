@@ -5316,9 +5316,6 @@ const importExternalContent = async (options: {
 
   if (!validConfigUrl && !template && !importUrl && !hasContentUrls(config)) return false;
 
-  const loadingMessage = window.deps.translateString('core.import.loading', 'Loading Project...');
-  notifications.info(loadingMessage);
-
   let templateConfig: Partial<Config> = {};
   let importUrlConfig: Partial<Config> = {};
   let contentUrlConfig: Partial<Config> = {};
