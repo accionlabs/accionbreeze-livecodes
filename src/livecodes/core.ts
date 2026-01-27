@@ -4797,6 +4797,7 @@ const handleResultLoading = () => {
 
   const showResultModeDrawer = (event: MessageEvent) => {
     // Don't show "Edit on LiveCodes" drawer in result mode - always return early
+    console.log('event',event)
     return;
 
     // Original code disabled to prevent drawer from showing
