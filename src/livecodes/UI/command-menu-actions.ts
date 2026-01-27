@@ -814,6 +814,10 @@ export const getCommandMenuActions = ({
       keywords: 'picture screenshot',
       mdIcon: 'camera',
       handler: () => {
+        // Block screenshot capture when mode=result
+        if (getConfig().mode === 'result') {
+          return;
+        }
         UI.getCodeToImageButton()?.click();
       },
     },

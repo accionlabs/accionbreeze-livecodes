@@ -42,6 +42,11 @@ import { createCustomEditors, createEditor, getFontFamily } from './editor';
 import { hasJsx } from './editor/ts-compiler-options';
 import { createEventsManager, createPub } from './events';
 import { customEvents } from './events/custom-events';
+import {
+  initScreenshotProtection,
+  isScreenshotShortcut,
+  triggerScreenshotHooks,
+} from './events/screenshot-hook';
 import { exportJSON } from './export/export-json';
 import { getFormatter } from './formatter';
 import type { Formatter } from './formatter/models';
@@ -677,6 +682,17 @@ const showMode = (mode?: Config['mode'], view?: Config['view']) => {
   if (mode === 'result') {
     if (!['full', 'open'].includes(toolsPane?.getStatus() || '')) {
       toolsPane?.hide();
+    }
+    // Hide code to image button in result mode
+    const codeToImageBtn = UI.getCodeToImageButton();
+    if (codeToImageBtn) {
+      codeToImageBtn.style.display = 'none';
+    }
+  } else {
+    // Show code to image button in other modes
+    const codeToImageBtn = UI.getCodeToImageButton();
+    if (codeToImageBtn) {
+      codeToImageBtn.style.display = '';
     }
   }
   document.body.classList.toggle('simple-mode', mode === 'simple');
@@ -2576,6 +2592,22 @@ const handleKeyboardShortcuts = () => {
   let lastkeys = '';
 
   const hotKeys = async (e: KeyboardEvent) => {
+    // Block screenshot shortcuts in result mode
+    if (getConfig().mode === 'result') {
+      const screenshotInfo = isScreenshotShortcut(e);
+      if (screenshotInfo.isScreenshot) {
+        e.preventDefault();
+        e.stopPropagation();
+        triggerScreenshotHooks({
+          key: e.key,
+          shortcut: screenshotInfo.shortcut,
+          platform: screenshotInfo.platform,
+          prevented: true,
+        });
+        notifications.warning('Screenshot capture is disabled in result mode');
+        return;
+      }
+    }
     // Ctrl + P opens the command palette
     const activeEditor = getActiveEditor();
     if (ctrl(e) && e.code === 'KeyP' && activeEditor.monaco) {
@@ -3035,6 +3067,11 @@ const handleEditorTools = () => {
   });
 
   eventsManager.addEventListener(UI.getCodeToImageButton(), 'click', () => {
+    // Block screenshot capture when mode=result
+    if (getConfig().mode === 'result') {
+      notifications.warning('Screenshot capture is disabled in result mode');
+      return;
+    }
     showScreen('code-to-image');
   });
 
@@ -5167,6 +5204,10 @@ const basicHandlers = () => {
   handleChangeLanguage();
   handleChangeContent();
   handleKeyboardShortcuts();
+  initScreenshotProtection(
+    () => getConfig().mode || '',
+    () => UI.getResultElement(),
+  );
   handleRunButton();
   handleResultButton();
   handleShareButton();
